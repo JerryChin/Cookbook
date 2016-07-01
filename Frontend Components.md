@@ -61,32 +61,78 @@ div.navigator a:hover,div.navigator a:active {
 ````
 #### JavaScript
 ````javascript
-<script>
-var slideIndex = 1; //default slide
-showDivs(slideIndex);
-
-function plusDivs(n) {
-  showDivs(slideIndex += n);
+/**
+ * 
+ */
+function EasySlide(containerId, defaultItemPos) {
+	this.containerId = containerId;
+	this.wrappers = document.querySelectorAll(containerId + " .wrapper");
+	this.links = document.querySelectorAll(containerId + " .itemLinks");
+	this.activeItemPos = -1;
+	this.defaultItemPos = defaultItemPos;
+	return this;
 }
 
-function showDivs(n) {
-  var i;
-  var x = document.getElementsByClassName("mySlides");
-  if (n > x.length) {slideIndex = 1}
-  if (n < 1) {slideIndex = x.length}
-  for (i = 0; i < x.length; i++) {
-     x[i].style.display = "none";
-  }
-  x[slideIndex-1].style.display = "block";
+EasySlide.prototype.previousItem = function() {
+	if(this.activeItemPos == 0)
+		this.activeItemPos = this.links.length;
+	this.changePosition(this.links[--this.activeItemPos]);
 }
 
-$(function(){
-	$("[href='#']").click(function(){
-		$(".active").removeClass("active");
-		 $(this).addClass("active");
-		 var order = $(this).attr('order');
-		 //showDivs(order); TODO need to be implemented
-	  })
-})
-</script>
+EasySlide.prototype.nextItem = function() {
+	if(this.activeItemPos == this.links.length - 1)
+		this.activeItemPos = -1;
+	this.changePosition(this.links[++this.activeItemPos]);
+}
+
+EasySlide.prototype.changePosition=function(link) {
+    this.removeActiveLinks();
+ 	this.hideActiveWrapper();
+	var position = link.getAttribute("data-pos");
+	this.activeItemPos = position;
+	$(this.wrappers[position]).css("display","block");
+	$(link).addClass("active");
+}
+
+EasySlide.prototype.addItemListener = function() {
+	var retention = this;
+	// setup the event listeners
+	for (var i = 0; i < this.links.length; i++) {
+	    $(this.links[i]).click(function(e) {
+	    	retention.setClickedItem(e);
+	    });
+	}
+	return this;
+}
+
+EasySlide.prototype.setClickedItem = function(e) {
+    this.changePosition(e.target);
+}
+
+EasySlide.prototype.removeActiveLinks = function() {
+	for (var i = 0; i < this.links.length; i++) {
+        $(this.links[i]).removeClass("active");
+    }
+}
+
+EasySlide.prototype.hideActiveWrapper = function() {
+	for (var i = 0; i < this.wrappers.length; i++) {
+        $(this.wrappers[i]).css("display", "none");
+    }
+}
+
+EasySlide.prototype.init = function() {
+	var retention = this;
+	$(function(){
+		setTimeout(function() {
+			$(retention.containerId + " .upper-btn-left").click(function(){
+				retention.previousItem();
+			});
+			$(retention.containerId + " .upper-btn-right").click(function(){
+				retention.nextItem();
+			});
+			retention.addItemListener().changePosition(retention.links[retention.defaultItemPos]);
+	}, 10);
+	});
+}
 ````
